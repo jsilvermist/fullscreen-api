@@ -1,0 +1,25 @@
+{
+  "name": "@jsilvermist/fullscreen-api",
+  "version": "0.1.0",
+  "description": "A Fullscreen API polyfill for use with custom elements",
+  "main": "fullscreen-api.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsilvermist/fullscreen-api.git"
+  },
+  "keywords": [
+    "fullscreen",
+    "api",
+    "polyfill",
+    "interface"
+  ],
+  "author": "Jsilvermist <jsilvermist@silverlinkz.net> (https://silverlinkz.net)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jsilvermist/fullscreen-api/issues"
+  },
+  "homepage": "https://github.com/jsilvermist/fullscreen-api#readme"
+}
