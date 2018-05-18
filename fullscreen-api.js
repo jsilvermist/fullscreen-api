@@ -52,7 +52,7 @@ for (const vendor in apis) {
 
 const fullscreen = {};
 
-// Set initial static properties
+// Mirror initial static properties
 fullscreen[w3.enabled] = document[api.enabled];
 fullscreen[w3.element] = document[api.element];
 
@@ -76,6 +76,9 @@ fullscreen.registerFullscreen = function(target) {
 
   if (api && api !== w3) {
 
+    // [TODO]: Where should this dispatch the w3 event?
+    // target || document || by-callback
+
     target.addEventListener(api.events.change, (e) => {
       e.stopPropagation();
       e.stopImmediatePropagation();
@@ -84,20 +87,35 @@ fullscreen.registerFullscreen = function(target) {
       this[w3.enabled] = document[api.enabled];
       this[w3.element] = document[api.element];
 
-      // [TODO]: What should this be dispatched on? target || document || by-function
-      target.dispatchEvent(new CustomEvent(w3.events.change, {detail:{originalEvent:e}}));
+      target.dispatchEvent(new CustomEvent(w3.events.change, {
+        detail: { originalEvent: e }
+      }));
     });
 
     target.addEventListener(api.events.error, (e) => {
-      // [TODO]: What should this be dispatched on? target || document || by-function
-      target.dispatchEvent(new CustomEvent(w3.events.error, {detail:{originalEvent:e}}));
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      target.dispatchEvent(new CustomEvent(w3.events.error, {
+        detail: { originalEvent: e }
+      }));
     });
 
     return true;
 
-  // [TODO]: Support official w3 api here
-  // } else if (api && api === w3) {
-  //   return true;
+  } else if (api && api === w3) {
+
+    // Mirror initial static properties
+    this[w3.enabled] = document[api.enabled];
+    this[w3.element] = document[api.element];
+
+    target.addEventListener(api.events.change, (e) => {
+      // Update static properties on change
+      this[w3.enabled] = document[api.enabled];
+      this[w3.element] = document[api.element];
+    });
+
+    return true;
 
   } else {
 
