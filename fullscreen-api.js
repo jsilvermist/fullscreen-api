@@ -52,99 +52,86 @@ for (const vendor in apis) {
 const changeCallbacks = [];
 const errorCallbacks = [];
 
-export const fullscreen = {
+// Mirror initial static properties
+export let fullscreenEnabled = document[api.enabled] || false;
+export let fullscreenElement = document[api.element] || null;
 
-  // Mirror initial static properties
-  enabled: document[api.enabled] || false,
-  element: document[api.element] || null,
+// Bind exit method
+export const exitFullscreen = document[api.exit].bind(document);
 
-  // Call request for fullscreen on element
-  request(target) {
-    target[api.request].call(target);
-  },
+// Call request for fullscreen on element
+export const requestFullscreen = function(target) {
+  target[api.request].call(target);
+}
 
-  // Bind exit method
-  exit: document[api.exit].bind(document),
-
-  resolveListenerType(type) {
-    switch (type) {
-      case 'change':
-        return changeCallbacks;
-      case 'error':
-        return errorCallbacks;
-      default:
-        console.error(`[fullscreen-api] '${type}' is not a valid type, please use 'change' or 'error'.`);
-        return null;
-    }
-  },
-
-  resolveListenerCallback(cb) {
-    if (typeof cb === 'function') {
-      return cb;
-    } else {
-      console.error('[fullscreen-api] Listener callback is not a function:', cb);
+function resolveListenerType(type) {
+  switch (type) {
+    case 'change':
+      return changeCallbacks;
+    case 'error':
+      return errorCallbacks;
+    default:
+      console.error(`[fullscreen-api] '${type}' is not a valid type, please use 'change' or 'error'.`);
       return null;
-    }
-  },
+  }
+}
 
-  addListener(type, cb) {
-    type = this.resolveListenerType(type);
-    cb = this.resolveListenerCallback(cb);
-    if (!type || !cb) {
-      return false;
-    }
-    const index = type.indexOf(cb);
-    if (index !== -1) {
-      return false;
-    }
-    type.push(cb);
-    return true;
-  },
+function resolveListenerCallback(cb) {
+  if (typeof cb === 'function') {
+    return cb;
+  } else {
+    console.error('[fullscreen-api] Listener callback is not a function:', cb);
+    return null;
+  }
+}
 
-  removeListener(type, cb) {
-    type = this.resolveListenerType(type);
-    cb = this.resolveListenerCallback(cb);
-    if (!type || !cb) {
-      return false;
-    }
-    const index = type.indexOf(cb);
-    if (index === -1) {
-      return false;
-    }
-    type.splice(index, 1);
-    return true;
-  },
+export const addFullscreenListener = function(type, cb) {
+  type = resolveListenerType(type);
+  cb = resolveListenerCallback(cb);
+  if (!type || !cb) {
+    return false;
+  }
+  const index = type.indexOf(cb);
+  if (index !== -1) {
+    return false;
+  }
+  type.push(cb);
+  return true;
+}
 
-  // Register Polyfill on document or custom-element
-  registerPolyfill(target) {
-    if (this.enabled) {
+export const removeFullscreenListener = function(type, cb) {
+  type = resolveListenerType(type);
+  cb = resolveListenerCallback(cb);
+  if (!type || !cb) {
+    return false;
+  }
+  const index = type.indexOf(cb);
+  if (index === -1) {
+    return false;
+  }
+  type.splice(index, 1);
+  return true;
+}
 
-      target.addEventListener(api.events.change, (e) => {
-        // Update static properties on change
-        this.enabled = document[api.enabled];
-        this.element = document[api.element];
+if (fullscreenEnabled) {
+  document.addEventListener(api.events.change, (e) => {
+    // Update static properties on change
+    fullscreenEnabled = document[api.enabled];
+    fullscreenElement = document[api.element];
 
-        changeCallbacks.forEach(cb => {
-          typeof cb === 'function' && cb(e);
-        });
-      });
+    changeCallbacks.forEach(cb => cb(e));
+  });
 
-      target.addEventListener(api.events.error, (e) => {
-        errorCallbacks.forEach(cb => {
-          typeof cb === 'function' && cb(e);
-        });
-      });
+  document.addEventListener(api.events.error, (e) => {
+    errorCallbacks.forEach(cb => cb(e));
+  });
+}
 
-      return true;
-
-    } else {
-
-      return false;
-    }
-  },
-
+export default {
+  get enabled() { return fullscreenEnabled },
+  get element() { return fullscreenElement },
+  request: requestFullscreen,
+  exit: exitFullscreen,
+  addListener: addFullscreenListener,
+  removeListener: removeFullscreenListener,
 };
-
-fullscreen.registerPolyfill(document);
-
-export default fullscreen;
