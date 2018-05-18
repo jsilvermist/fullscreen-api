@@ -41,7 +41,6 @@ const apis = {
   },
 };
 
-const w3 = apis.w3;
 let api = null;
 for (const vendor in apis) {
   if (apis[vendor].enabled in document) {
@@ -50,16 +49,14 @@ for (const vendor in apis) {
   }
 }
 
+const changeCallbacks = [];
+const errorCallbacks = [];
+
 export const fullscreen = {
 
   // Mirror initial static properties
   enabled: document[api.enabled] || false,
   element: document[api.element] || null,
-
-  // Check if there is currently an active fullscreen element
-  get active() {
-    return this.enabled && this.element;
-  },
 
   // Call request for fullscreen on element
   request(target) {
@@ -69,45 +66,50 @@ export const fullscreen = {
   // Bind exit method
   exit: document[api.exit].bind(document),
 
+  addChangeListener(cb) {
+    if (typeof cb === 'function') {
+      changeCallbacks.push(cb);
+    } else {
+      console.warn('[fullscreen-api] Change callback is not a function:', cb);
+    }
+  },
+
+  addErrorListener(cb) {
+    if (typeof cb === 'function') {
+      errorCallbacks.push(cb);
+    } else {
+      console.warn('[fullscreen-api] Error callback is not a function:', cb);
+    }
+  },
+
+  removeChangeListener(cb) {
+    const index = changeCallbacks.indexOf(cb);
+    if (index >= 0) changeCallbacks.splice(index, 1);
+  },
+
+  removeErrorListener(cb) {
+    const index = errorCallbacks.indexOf(cb);
+    if (index >= 0) errorCallbacks.splice(index, 1);
+  },
+
   // Register Polyfill on document or custom-element
   registerPolyfill(target) {
-    target = target || document;
-
-    if (api && api !== w3) {
-
-      // [TODO]: Where should this dispatch the w3 event?
-      // target || document || by-callback
+    if (this.enabled) {
 
       target.addEventListener(api.events.change, (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
         // Update static properties on change
         this.enabled = document[api.enabled];
         this.element = document[api.element];
 
-        document.dispatchEvent(new CustomEvent(w3.events.change, {
-          detail: { originalEvent: e }
-        }));
+        changeCallbacks.forEach(cb => {
+          typeof cb === 'function' && cb(e);
+        });
       });
 
       target.addEventListener(api.events.error, (e) => {
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-
-        document.dispatchEvent(new CustomEvent(w3.events.error, {
-          detail: { originalEvent: e }
-        }));
-      });
-
-      return true;
-
-    } else if (api && api === w3) {
-
-      target.addEventListener(api.events.change, (e) => {
-        // Update static properties on change
-        this.enabled = document[api.enabled];
-        this.element = document[api.element];
+        errorCallbacks.forEach(cb => {
+          typeof cb === 'function' && cb(e);
+        });
       });
 
       return true;
@@ -119,5 +121,7 @@ export const fullscreen = {
   },
 
 };
+
+fullscreen.registerPolyfill(document);
 
 export default fullscreen;
