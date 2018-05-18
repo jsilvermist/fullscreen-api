@@ -66,30 +66,53 @@ export const fullscreen = {
   // Bind exit method
   exit: document[api.exit].bind(document),
 
-  addChangeListener(cb) {
-    if (typeof cb === 'function') {
-      changeCallbacks.push(cb);
-    } else {
-      console.warn('[fullscreen-api] Change callback is not a function:', cb);
+  resolveListenerType(type) {
+    switch (type) {
+      case 'change':
+        return changeCallbacks;
+      case 'error':
+        return errorCallbacks;
+      default:
+        console.error(`[fullscreen-api] '${type}' is not a valid type, please use 'change' or 'error'.`);
+        return null;
     }
   },
 
-  addErrorListener(cb) {
+  resolveListenerCallback(cb) {
     if (typeof cb === 'function') {
-      errorCallbacks.push(cb);
+      return cb;
     } else {
-      console.warn('[fullscreen-api] Error callback is not a function:', cb);
+      console.error('[fullscreen-api] Listener callback is not a function:', cb);
+      return null;
     }
   },
 
-  removeChangeListener(cb) {
-    const index = changeCallbacks.indexOf(cb);
-    if (index >= 0) changeCallbacks.splice(index, 1);
+  addListener(type, cb) {
+    type = this.resolveListenerType(type);
+    cb = this.resolveListenerCallback(cb);
+    if (!type || !cb) {
+      return false;
+    }
+    const index = type.indexOf(cb);
+    if (index !== -1) {
+      return false;
+    }
+    type.push(cb);
+    return true;
   },
 
-  removeErrorListener(cb) {
-    const index = errorCallbacks.indexOf(cb);
-    if (index >= 0) errorCallbacks.splice(index, 1);
+  removeListener(type, cb) {
+    type = this.resolveListenerType(type);
+    cb = this.resolveListenerCallback(cb);
+    if (!type || !cb) {
+      return false;
+    }
+    const index = type.indexOf(cb);
+    if (index === -1) {
+      return false;
+    }
+    type.splice(index, 1);
+    return true;
   },
 
   // Register Polyfill on document or custom-element
