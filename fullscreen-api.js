@@ -53,11 +53,11 @@ const changeCallbacks = [];
 const errorCallbacks = [];
 
 // Mirror initial static properties
-export let fullscreenEnabled = document[api.enabled] || false;
-export let fullscreenElement = document[api.element] || null;
+export let fullscreenEnabled = api !== null && document[api.enabled];
+export let fullscreenElement = api !== null ? document[api.element] : null;
 
 // Bind exit method
-export const exitFullscreen = document[api.exit].bind(document);
+export const exitFullscreen = api !== null ? document[api.exit].bind(document) : undefined;
 
 // Call request for fullscreen on element
 export const requestFullscreen = function(target) {

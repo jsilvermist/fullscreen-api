@@ -1,8 +1,8 @@
 Fullscreen API Interface
 ========================
 
-A modular Fullscreen API interface that can be used without
-interfering with other potential polyfills added at a global level.
+A modular Fullscreen API interface (mind the double 'interface') that can be
+used without interfering with other potential polyfills added at a global level.
 
 [More information about the Fullscreen API](https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API).
 
